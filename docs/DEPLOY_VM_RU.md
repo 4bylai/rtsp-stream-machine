@@ -33,7 +33,7 @@ sudo systemctl enable --now docker
 ### Вариант A: из Git
 
 ```bash
-git clone <REPO_URL> rtsp-stream-machine
+git clone <REPO_URL>
 cd rtsp-stream-machine
 ```
 

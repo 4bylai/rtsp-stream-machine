@@ -14,7 +14,6 @@ Stack:
 ## Project layout
 
 ```text
-rtsp-stream-machine/
 ├── docker-compose.yml
 ├── README.md
 ├── config/
@@ -48,7 +47,6 @@ ffprobe -version
 ## Installation
 
 ```bash
-cd rtsp-stream-machine
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -179,7 +177,6 @@ FastAPI backend and a UI that talks to the API:
 Manual run (alternative to Docker backend):
 
 ```bash
-cd rtsp-stream-machine
 source .venv/bin/activate
 pip install -r requirements.txt
 python app/api_server.py
