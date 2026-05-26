@@ -15,4 +15,4 @@ streams:
   - name: "cam001"
     mode: "single"
     files:
-      - "videos/Camera_01_Aisar_4_20260424080000_20260424080100_830664.mp4"
+      - "videos/entrance_01.mp4"

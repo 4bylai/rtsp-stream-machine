@@ -1,0 +1,31 @@
+server:
+  rtsp_host: 127.0.0.1
+  rtsp_port: 8554
+  mediamtx_publish_host: 127.0.0.1
+
+defaults:
+  loop: true
+  codec_mode: auto
+  audio: false
+  fps: 25
+  width: 1280
+  height: 720
+
+streams:
+  - name: cam001
+    mode: single
+    files:
+      - videos/entrance_01.mp4
+
+  - name: lobby_playlist
+    mode: playlist
+    files:
+      - videos/entrance_01.mp4
+      - videos/entrance_02.mp4
+      - videos/parking_01.mp4
+
+  - name: parking_group
+    mode: separate
+    files:
+      - videos/parking_01.mp4
+      - videos/parking_02.mp4
