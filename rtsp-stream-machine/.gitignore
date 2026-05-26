@@ -5,3 +5,5 @@ pids/*.pid
 playlists/*.txt
 .venv/
 config/*_state.json
+videos/*
+!videos/.gitkeep
