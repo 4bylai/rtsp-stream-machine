@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+logs/*.log
+pids/*.pid
+playlists/*.txt
+.venv/
+config/*_state.json

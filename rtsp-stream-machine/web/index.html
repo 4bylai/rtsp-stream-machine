@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RTSP Stream Machine</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="backdrop"></div>
+    <main class="app-shell">
+      <header class="topbar glass">
+        <div class="brand">
+          <div class="leaf blink"></div>
+          <div>
+            <p class="brand-title">RTSP <span>Stream Machine</span></p>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="top-links" aria-label="Внешние ссылки">
+            <a class="top-link" href="/docs" target="_blank" rel="noopener noreferrer">Swagger</a>
+            <a class="top-link" href="/redoc" target="_blank" rel="noopener noreferrer">ReDoc</a>
+            <a class="top-link" href="/openapi.json" target="_blank" rel="noopener noreferrer">OpenAPI</a>
+            <a class="top-link" href="/backend/health" target="_blank" rel="noopener noreferrer">Health</a>
+            <a class="top-link" href="/backend/streams" target="_blank" rel="noopener noreferrer">Streams API</a>
+            <a class="top-link" href="/backend/videos" target="_blank" rel="noopener noreferrer">Videos API</a>
+            <a class="top-link" href="/backend/schedules" target="_blank" rel="noopener noreferrer">Schedules API</a>
+          </div>
+        </div>
+        <input id="videoUpload" type="file" accept=".mp4,.mkv,.mov,.avi,.ts,.m4v" hidden />
+      </header>
+
+      <section class="widget-grid">
+        <article class="widget glass">
+          <h3 class="widget-title">Стримы</h3>
+          <ul class="widget-meta-list">
+            <li><span>Итого</span><strong id="statStreams">-</strong></li>
+            <li><span>Активных</span><strong id="statRunning">-</strong></li>
+          </ul>
+        </article>
+        <article class="widget glass">
+          <h3 class="widget-title">Видео</h3>
+          <ul class="widget-meta-list">
+            <li><span>Итого</span><strong id="statVideos">-</strong></li>
+            <li><span>Отключено</span><strong id="statDisabledVideos">-</strong></li>
+            <li><span>Используется</span><strong id="statInUseVideos">-</strong></li>
+          </ul>
+        </article>
+        <article class="widget glass">
+          <h3 class="widget-title">Расписания</h3>
+          <ul class="widget-meta-list">
+            <li><span>Итого</span><strong id="statSchedules">-</strong></li>
+            <li><span>Включено</span><strong id="statSchedulesEnabled">-</strong></li>
+            <li><span>Следующий запуск</span><strong id="statNextRun">-</strong></li>
+          </ul>
+        </article>
+        <article class="widget glass">
+          <h3 class="widget-title">Состояние системы</h3>
+          <ul class="service-stack">
+            <li><span>API сервера</span><em id="apiHealth">-</em></li>
+            <li><span>MediaMTX</span><em id="mediamtxHealth">-</em></li>
+            <li><span>Планировщик</span><em id="schedulerHealth">-</em></li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="panel-grid" id="streams">
+        <article class="panel glass focus-panel" data-focus-section="streams-active">
+          <div class="panel-head">
+            <h2>Активные стримы</h2>
+            <div class="head-actions head-actions-inline">
+              <div class="filter-wrap">
+                <button id="streamTypeFilterBtn" class="chip" type="button">Типы стримов</button>
+                <div id="streamTypeFilterMenu" class="filter-menu hidden">
+                  <p class="filter-title">Показать типы</p>
+                  <label><input type="checkbox" name="stream_mode_filter" value="single" checked /> Single</label>
+                  <label><input type="checkbox" name="stream_mode_filter" value="playlist" checked /> Playlist</label>
+                  <label><input type="checkbox" name="stream_mode_filter" value="separate" checked /> Separate</label>
+                </div>
+              </div>
+              <button id="clearActiveStreamsBtn" class="chip danger">Очистить</button>
+              <button id="bootstrapStreamsBtn" class="chip">Запустить стрим</button>
+              <button class="chip focus-toggle" data-action="focusSection" data-section="streams-active" type="button" aria-label="Развернуть раздел" title="Развернуть">⛶</button>
+            </div>
+          </div>
+          <div id="activeStreamList" class="stream-list"></div>
+          <div id="activeStreamPager" class="pager-row"></div>
+        </article>
+
+        <article class="panel glass focus-panel" data-focus-section="videos-library" id="videos">
+          <div class="panel-head">
+            <h2>Библиотека видео</h2>
+            <div class="head-actions">
+              <label class="chip" for="videoUpload">+ Загрузить</label>
+              <button id="clearVideosBtn" class="chip danger">Очистить</button>
+              <button class="chip focus-toggle" data-action="focusSection" data-section="videos-library" type="button" aria-label="Развернуть раздел" title="Развернуть">⛶</button>
+            </div>
+          </div>
+          <div id="videoFormats" class="muted formats"></div>
+          <div id="videoList" class="video-list"></div>
+          <div id="videoPager" class="pager-row"></div>
+        </article>
+      </section>
+
+      <section class="panel-grid bottom" id="schedules">
+        <article class="panel glass focus-panel" data-focus-section="schedules-main">
+          <div class="panel-head">
+            <h2>Расписания</h2>
+            <div class="head-actions">
+              <button id="clearSchedulesBtn" class="chip danger">Очистить</button>
+              <button id="addScheduleBtn" class="chip">+ Быстрый таймер</button>
+              <button class="chip focus-toggle" data-action="focusSection" data-section="schedules-main" type="button" aria-label="Развернуть раздел" title="Развернуть">⛶</button>
+            </div>
+          </div>
+          <div id="scheduleList" class="schedule-grid"></div>
+        </article>
+
+        <article class="panel glass panel-compact focus-panel" data-focus-section="disk-main">
+          <div class="panel-head">
+            <h2>Диск</h2>
+            <div class="head-actions">
+              <button class="chip focus-toggle" data-action="focusSection" data-section="disk-main" type="button" aria-label="Развернуть раздел" title="Развернуть">⛶</button>
+            </div>
+          </div>
+          <div id="diskList" class="disk-list"></div>
+        </article>
+
+        <article class="panel glass focus-panel" data-focus-section="logs-main">
+          <div class="panel-head">
+            <h2>Логи</h2>
+            <div class="head-actions">
+              <div class="filter-wrap">
+                <button id="logTypeFilterBtn" class="chip" type="button">Типы логов</button>
+                <div id="logTypeFilterMenu" class="filter-menu hidden">
+                  <p class="filter-title">Показать уровни</p>
+                  <label><input type="checkbox" name="log_level_filter" value="info" checked /> Info</label>
+                  <label><input type="checkbox" name="log_level_filter" value="warn" checked /> Warn</label>
+                  <label><input type="checkbox" name="log_level_filter" value="err" checked /> Error</label>
+                </div>
+              </div>
+              <button class="chip focus-toggle" data-action="focusSection" data-section="logs-main" type="button" aria-label="Развернуть раздел" title="Развернуть">⛶</button>
+            </div>
+          </div>
+          <div id="importantLogs" class="log-list"></div>
+          <div id="logPager" class="pager-row"></div>
+        </article>
+      </section>
+
+      <div id="toast" class="toast hidden"></div>
+      <div id="pageLoader" class="page-loader hidden">
+        <div class="loader-dot"></div>
+        <p>Выполняю действие...</p>
+      </div>
+      <div id="deleteVideoModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="deleteVideoTitle">
+        <div class="modal-card glass">
+          <div class="panel-head modal-head">
+            <h3 id="deleteVideoTitle">Удалить видео</h3>
+            <button id="deleteVideoCancelBtn" class="chip" type="button">Отмена</button>
+          </div>
+          <p id="deleteVideoText" class="muted">Вы уверены, что хотите удалить видео?</p>
+          <p class="muted small">Удаление недоступно, если файл используется в стриме.</p>
+          <div class="row-actions">
+            <button id="deleteVideoConfirmBtn" class="btn danger" type="button">Удалить</button>
+          </div>
+        </div>
+      </div>
+      <div
+        id="deleteScheduleModal"
+        class="modal-backdrop hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="deleteScheduleTitle"
+      >
+        <div class="modal-card glass">
+          <div class="panel-head modal-head">
+            <h3 id="deleteScheduleTitle">Удалить правило таймера</h3>
+            <button id="deleteScheduleCancelBtn" class="chip" type="button">Отмена</button>
+          </div>
+          <p id="deleteScheduleText" class="muted">Удалить это правило расписания?</p>
+          <p class="muted small">После удаления правило нельзя восстановить.</p>
+          <div class="row-actions">
+            <button id="deleteScheduleConfirmBtn" class="btn danger" type="button">Удалить</button>
+          </div>
+        </div>
+      </div>
+      <div id="bulkClearModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="bulkClearTitle">
+        <div class="modal-card glass">
+          <div class="panel-head modal-head">
+            <h3 id="bulkClearTitle">Подтвердите очистку</h3>
+            <button id="bulkClearCancelBtn" class="chip" type="button">Отмена</button>
+          </div>
+          <p id="bulkClearText" class="muted">Вы собираетесь выполнить массовую очистку.</p>
+          <p id="bulkClearHint" class="muted small">Действие может затронуть несколько элементов.</p>
+          <div class="row-actions">
+            <button id="bulkClearConfirmBtn" class="btn danger" type="button">Очистить</button>
+          </div>
+        </div>
+      </div>
+      <div id="bootstrapModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="bootstrapTitle">
+        <div class="modal-card modal-wide glass">
+          <div class="panel-head modal-head">
+            <h3 id="bootstrapTitle">Создать из видео и запустить</h3>
+            <button id="bootstrapCancelBtn" class="chip" type="button">Закрыть</button>
+          </div>
+          <form id="bootstrapForm" class="modal-form">
+            <label>
+              <span class="required-mark">Сценарий запуска</span>
+              <select id="bootstrapMode">
+                <option value="single">Single: один стрим из одного видео</option>
+                <option value="playlist">Playlist: один стрим из нескольких видео</option>
+                <option value="multi">Multi: несколько стримов (1 видео = 1 стрим)</option>
+              </select>
+            </label>
+            <label id="bootstrapNameWrap">
+              <span class="required-mark">Имя стрима</span>
+              <input id="bootstrapName" type="text" placeholder="cam001 или entrance_day" />
+            </label>
+            <label id="bootstrapPrefixWrap" class="hidden">
+              <span class="required-mark">Префикс имен для multi</span>
+              <input id="bootstrapPrefix" type="text" placeholder="cam_auto_" value="cam_auto_" />
+            </label>
+            <label>
+              <span class="required-mark label-inline">
+                Кодек
+                <span
+                  class="hint-tip has-tooltip"
+                  data-tooltip="Auto (по умолчанию): если файл совместим, запускается Copy; иначе Transcode."
+                  aria-label="Auto: если файл совместим, используется copy, иначе transcode"
+                  >?</span
+                >
+              </span>
+              <select id="bootstrapCodec">
+                <option value="auto">Auto (рекомендуется)</option>
+                <option value="transcode">Transcode (H.264)</option>
+                <option value="copy">Copy</option>
+              </select>
+            </label>
+            <label class="checkbox-line">
+              <input id="bootstrapStartNow" type="checkbox" checked />
+              <span>Запускать сразу после создания</span>
+            </label>
+            <p id="bootstrapModeHint" class="muted small"></p>
+            <label>
+              <span>Поиск видео</span>
+              <input id="bootstrapVideoSearch" type="text" placeholder="Начните вводить имя файла..." />
+            </label>
+            <div class="row-actions">
+              <button id="bootstrapPickAllBtn" class="mini" type="button">Выбрать все</button>
+              <button id="bootstrapClearAllBtn" class="mini" type="button">Снять все</button>
+            </div>
+            <div id="bootstrapVideoPicker" class="video-picker" data-required-group="bootstrap-files"></div>
+            <div class="row-actions">
+              <button id="bootstrapSubmitBtn" class="btn solid" type="submit">Создать и запустить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div id="playlistVideoModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="playlistVideoTitle">
+        <div class="modal-card glass">
+          <div class="panel-head modal-head">
+            <h3 id="playlistVideoTitle">Добавить видео в плейлист</h3>
+            <button id="playlistVideoCancelBtn" class="chip" type="button">Закрыть</button>
+          </div>
+          <p id="playlistVideoTarget" class="muted small">Стрим: -</p>
+          <form id="playlistVideoForm" class="modal-form">
+            <div class="row-actions">
+              <button id="playlistVideoPickAllBtn" class="mini" type="button">Выбрать все</button>
+              <button id="playlistVideoClearAllBtn" class="mini" type="button">Снять все</button>
+            </div>
+            <div id="playlistVideoPicker" class="video-picker"></div>
+            <div class="row-actions">
+              <button id="playlistVideoSubmitBtn" class="btn solid" type="submit">Добавить в плейлист</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div id="createStreamModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="createStreamTitle">
+        <div class="modal-card glass">
+          <div class="panel-head modal-head">
+            <h3 id="createStreamTitle">Создать стрим из видео</h3>
+            <button id="createStreamCancelBtn" class="chip" type="button">Закрыть</button>
+          </div>
+          <form id="createStreamForm" class="modal-form">
+            <label>
+              <span class="required-mark">Имя стрима</span>
+              <input id="createStreamName" type="text" placeholder="cam004 или playlist_entrance" required />
+            </label>
+            <label>
+              <span class="required-mark">Режим</span>
+              <select id="createStreamMode">
+                <option value="single">Single (один файл)</option>
+                <option value="playlist">Playlist (несколько файлов)</option>
+              </select>
+            </label>
+            <label>
+              <span class="required-mark label-inline">
+                Кодек
+                <span
+                  class="hint-tip has-tooltip"
+                  data-tooltip="Auto (по умолчанию): если файл совместим, запускается Copy; иначе Transcode."
+                  aria-label="Auto: если файл совместим, используется copy, иначе transcode"
+                  >?</span
+                >
+              </span>
+              <select id="createStreamCodec">
+                <option value="auto">Auto (рекомендуется)</option>
+                <option value="transcode">Transcode (H.264)</option>
+                <option value="copy">Copy</option>
+              </select>
+            </label>
+            <label class="checkbox-line">
+              <input id="createStreamStartNow" type="checkbox" checked />
+              <span>Запустить сразу после создания</span>
+            </label>
+            <div>
+              <p class="muted small required-mark">Выберите файлы для стрима:</p>
+              <div id="createStreamVideoPicker" class="video-picker" data-required-group="create-files"></div>
+            </div>
+            <div class="row-actions">
+              <button id="createStreamSubmitBtn" class="btn solid" type="submit">Создать</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div id="quickTimerModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="quickTimerTitle">
+        <div class="modal-card glass">
+          <div class="panel-head modal-head">
+            <h3 id="quickTimerTitle">Быстрый таймер</h3>
+            <button id="quickTimerCancelBtn" class="chip" type="button">Закрыть</button>
+          </div>
+          <form id="quickTimerForm" class="modal-form">
+            <div>
+              <p class="muted small required-mark">Стримы</p>
+              <div class="row-actions">
+                <button id="quickTimerPickAllBtn" class="mini" type="button">Выбрать все</button>
+                <button id="quickTimerClearAllBtn" class="mini" type="button">Снять все</button>
+              </div>
+              <div id="quickTimerStreamPicker" class="video-picker" data-required-group="quicktimer-streams"></div>
+            </div>
+            <label>
+              <span class="required-mark">Действие</span>
+              <select id="quickTimerAction">
+                <option value="start">Запуск</option>
+                <option value="stop">Остановка</option>
+                <option value="delete">Удалить (остановить и убрать в архив)</option>
+              </select>
+            </label>
+            <label>
+              <span class="required-mark">Дата и время</span>
+              <input id="quickTimerDate" type="datetime-local" />
+            </label>
+            <p class="muted small">Часовой пояс будет взят из браузера автоматически.</p>
+            <div class="row-actions">
+              <button id="quickTimerSubmitBtn" class="btn solid" type="submit">Создать правила</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <footer class="app-footer">
+        <p>Разработано Меркенов А.Е</p>
+      </footer>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

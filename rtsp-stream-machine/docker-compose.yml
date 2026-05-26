@@ -1,0 +1,32 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: rtsp-backend
+    restart: unless-stopped
+    depends_on:
+      - mediamtx
+    environment:
+      STREAM_CONFIG: config/streams.yaml
+      STREAM_MEDIAMTX_PUBLISH_HOST: mediamtx
+      AUTO_RECOVER_STREAMS: "true"
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./app:/app/app
+      - ./config:/app/config
+      - ./web:/app/web
+      - ./videos:/app/videos
+      - ./playlists:/app/playlists
+      - ./logs:/app/logs
+      - ./pids:/app/pids
+
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: rtsp-mediamtx
+    restart: unless-stopped
+    ports:
+      - "8554:8554"
+    volumes:
+      - ./config/mediamtx.yml:/mediamtx.yml:ro

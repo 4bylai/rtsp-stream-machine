@@ -1,0 +1,16 @@
+[Unit]
+Description=RTSP Stream Machine API (host Python)
+After=network.target docker.service
+Wants=docker.service
+
+[Service]
+Type=simple
+User=developer
+WorkingDirectory=/home/developer/rtsp-stream-machine
+Environment=STREAM_CONFIG=config/streams.yaml
+ExecStart=/home/developer/rtsp-stream-machine/.venv/bin/python app/api_server.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

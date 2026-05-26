@@ -1,0 +1,86 @@
+server:
+  rtsp_host: 192.168.1.50
+  rtsp_port: 8554
+  mediamtx_publish_host: 127.0.0.1
+defaults:
+  loop: true
+  codec_mode: auto
+  audio: false
+  fps: 25
+  width: 1280
+  height: 720
+streams:
+- name: test
+  mode: single
+  files:
+  - videos/Abuse001_x264.mp4
+  codec_mode: transcode
+  manual_created: true
+- name: test2
+  mode: playlist
+  files:
+  - videos/Abuse001_x264.mp4
+  - videos/Abuse013_x264.mp4
+  - videos/Abuse014_x264.mp4
+  codec_mode: transcode
+  manual_created: true
+- name: cam001
+  mode: single
+  files:
+  - videos/Abuse001_x264.mp4
+  codec_mode: transcode
+  manual_created: true
+- name: cam002
+  mode: single
+  files:
+  - videos/Abuse013_x264.mp4
+  codec_mode: transcode
+  manual_created: true
+- name: cam003
+  mode: single
+  files:
+  - videos/Abuse014_x264.mp4
+  codec_mode: transcode
+  manual_created: true
+- name: test3
+  mode: single
+  files:
+  - videos/archive_1176_15-04-2026_08_49_15-04-2026_08_55.mp4
+  codec_mode: transcode
+  manual_created: true
+- name: test5
+  mode: playlist
+  files:
+  - videos/Abuse013_x264.mp4
+  - videos/Abuse014_x264.mp4
+  - videos/archive_1176_15-04-2026_08_49_15-04-2026_08_55.mp4
+  codec_mode: transcode
+  manual_created: true
+- name: test6
+  mode: playlist
+  files:
+  - videos/Assault038_x264.mp4
+  - videos/Assault039_x264.mp4
+  codec_mode: transcode
+  manual_created: true
+- name: test7
+  mode: single
+  files:
+  - videos/Abuse001_x264.mp4
+  codec_mode: auto
+  manual_created: true
+  created_at: 1779277742
+- name: test8
+  mode: single
+  files:
+  - videos/Abuse013_x264.mp4
+  codec_mode: auto
+  manual_created: true
+  created_at: 1779277748
+- name: test9
+  mode: single
+  files:
+  - videos/Assault012_x264.mp4
+  codec_mode: auto
+  manual_created: true
+  created_at: 1779277753

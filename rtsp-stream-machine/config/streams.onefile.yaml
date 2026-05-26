@@ -1,0 +1,18 @@
+server:
+  rtsp_host: "127.0.0.1"
+  rtsp_port: 8554
+  mediamtx_publish_host: "127.0.0.1"
+
+defaults:
+  loop: true
+  codec_mode: "copy"
+  audio: false
+  fps: 25
+  width: 1280
+  height: 720
+
+streams:
+  - name: "cam001"
+    mode: "single"
+    files:
+      - "videos/Camera_01_Aisar_4_20260424080000_20260424080100_830664.mp4"
